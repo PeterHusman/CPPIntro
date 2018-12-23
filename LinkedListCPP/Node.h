@@ -2,13 +2,14 @@
 #include <memory>
 
 using std::unique_ptr;
+using std::shared_ptr;
 
 template <typename T>
 class Node
 {
 public:
-	unique_ptr<Node<T>> Next;
-	Node<T>* Previous;
+	shared_ptr<Node<T>> Next;
+	shared_ptr<Node<T>> Previous;
 	T Value;
 	Node(T);
 };
@@ -22,18 +23,52 @@ Node<T>::Node(T value)
 template <typename T>
 class LinkedList
 {
+private:
+	void remove(shared_ptr<Node<T>>);
 public:
-	unique_ptr<Node<T>> Head;
+	shared_ptr<Node<T>> Head;
 	int Length();
 	T GetAtIndex(int);
 	void SetAtIndex(int, T);
-	Node<T>* Last();
+	shared_ptr<Node<T>> Last();
 	void Insert(T);
+	bool IsCircular();
+	bool Remove(T);
 };
 
 template<typename T>
+bool LinkedList<T>::IsCircular() {
+	shared_ptr<Node<T>> node = Head;
+	if (node == nullptr)
+	{
+		return false;
+	}
+	shared_ptr<Node<T>> nodeTwo = Head->Next;
+	if (nodeTwo == nullptr)
+	{
+		return false;
+	}
+	while (true)
+	{
+		node = node->Next;
+		for (int i = 0; i < 2; i++)
+		{
+			nodeTwo = nodeTwo->Next;
+			if (nodeTwo == nullptr)
+			{
+				return false;
+			}
+			else if (node == nodeTwo)
+			{
+				return true;
+			}
+		}
+	}
+}
+
+template<typename T>
 int LinkedList<T>::Length() {
-	Node<T>* node = Head.get();
+	shared_ptr<Node<T>> node = Head;
 	if (node == nullptr)
 	{
 		return 0;
@@ -42,7 +77,7 @@ int LinkedList<T>::Length() {
 	while (node->Next != nullptr)
 	{
 		len++;
-		node = node->Next.get();
+		node = node->Next;
 	}
 	return len;
 }
@@ -50,14 +85,14 @@ int LinkedList<T>::Length() {
 template<typename T>
 T LinkedList<T>::GetAtIndex(int index)
 {
-	Node<T>* node = Head.get();
+	shared_ptr<Node<T>> node = Head;
 	if (node == nullptr)
 	{
 		return {};
 	}
 	for (int i = 0; i < index; i++)
 	{
-		node = node->Next.get();
+		node = node->Next;
 		if (node == nullptr)
 		{
 			return {};
@@ -69,14 +104,14 @@ T LinkedList<T>::GetAtIndex(int index)
 template<typename T>
 void LinkedList<T>::SetAtIndex(int index, T value)
 {
-	Node<T>* node = Head.get();
+	shared_ptr<Node<T>> node = Head;
 	if (node == nullptr)
 	{
 		return {};
 	}
 	for (int i = 0; i < index; i++)
 	{
-		node = node->Next.get();
+		node = node->Next;
 		if (node == nullptr)
 		{
 			return {};
@@ -86,16 +121,16 @@ void LinkedList<T>::SetAtIndex(int index, T value)
 }
 
 template<typename T>
-Node<T>* LinkedList<T>::Last()
+shared_ptr<Node<T>> LinkedList<T>::Last()
 {
-	Node<T>* node = Head.get();
+	shared_ptr<Node<T>> node = Head;
 	if (node == nullptr)
 	{
 		throw;
 	}
 	while (node->Next != nullptr)
 	{
-		node = node->Next.get();
+		node = node->Next;
 	}
 	return node;
 }
@@ -105,8 +140,66 @@ void LinkedList<T>::Insert(T value)
 {
 	if (Head == nullptr)
 	{
-		Head = std::make_unique<Node<T>>(value);
+		Head = std::make_shared<Node<T>>(value);
 		return;
 	}
-	Last()->Next = std::make_unique<Node<T>>(value);
+	shared_ptr<Node<T>> node = Last();
+	node->Next = std::make_shared<Node<T>>(value);
+	node->Next->Previous = node;
+}
+template<typename T>
+bool LinkedList<T>::Remove(T value)
+{
+	shared_ptr<Node<T>> node = Head;
+	if (node == nullptr)
+	{
+		return false;
+	}
+	if (node->Value == value)
+	{
+		remove(node);
+		return true;
+	}
+	shared_ptr<Node<T>> nodeTwo = Head->Next;
+	if (nodeTwo == nullptr)
+	{
+		return false;
+	}
+	while (true)
+	{
+		node = node->Next;
+		for (int i = 0; i < 2; i++)
+		{
+			nodeTwo = nodeTwo->Next;
+		    if (nodeTwo == nullptr)
+			{
+				return false;
+			}
+			else if (nodeTwo->Value == value)
+			{
+				remove(nodeTwo);
+				return true;
+			}
+			else if (node == nodeTwo)
+			{
+				return false;
+			}
+		}
+	}
+}
+template<typename T>
+void LinkedList<T>::remove(shared_ptr<Node<T>> node)
+{
+	if (Head == node)
+	{
+		Head = node->Next;
+	}
+	if (node->Next != nullptr)
+	{
+		node->Next->Previous = node->Previous;
+	}
+	if (node->Previous != nullptr)
+	{
+		node->Previous->Next = node->Next;
+	}
 }
