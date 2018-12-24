@@ -11,7 +11,10 @@ public:
 	shared_ptr<Node<T>> Next;
 	shared_ptr<Node<T>> Previous;
 	T Value;
+	//Constructor
 	Node(T);
+	//Would-be destructor
+	//~Node();
 };
 
 template<typename T>
@@ -25,19 +28,70 @@ class LinkedList
 {
 private:
 	void remove(shared_ptr<Node<T>>);
+	bool Circular;
+	shared_ptr<Node<T>> last;
 public:
 	shared_ptr<Node<T>> Head;
 	int Length();
+	bool IsSpecifiedCircular();
+	void MakeCircular();
+	void MakeNotCircular();
+	bool ToggleCircular();
 	T GetAtIndex(int);
 	void SetAtIndex(int, T);
 	shared_ptr<Node<T>> Last();
 	void Insert(T);
-	bool IsCircular();
+	bool HasCycle();
 	bool Remove(T);
 };
 
 template<typename T>
-bool LinkedList<T>::IsCircular() {
+void LinkedList<T>::MakeCircular() {
+	Circular = true;
+	if (Head == nullptr)
+	{
+		return;
+	}
+	shared_ptr<Node<T>> last = Last();
+	Head->Previous = last;
+	last->Next = Head;
+}
+
+template<typename T>
+void LinkedList<T>::MakeNotCircular() {
+	Circular = false;
+	if (Head == nullptr)
+	{
+		return;
+	}
+	shared_ptr<Node<T>> last = Last();
+	Head->Previous = nullptr;
+	last->Next = nullptr;
+}
+
+template<typename T>
+bool LinkedList<T>::ToggleCircular()
+{
+	if (Circular)
+	{
+		MakeNotCircular();
+	}
+	else
+	{
+		MakeCircular();
+	}
+	return Circular;
+}
+
+
+
+template<typename T>
+bool LinkedList<T>::IsSpecifiedCircular() {
+	return IsSpecifiedCircular();
+}
+
+template<typename T>
+bool LinkedList<T>::HasCycle() {
 	shared_ptr<Node<T>> node = Head;
 	if (node == nullptr)
 	{
@@ -74,7 +128,7 @@ int LinkedList<T>::Length() {
 		return 0;
 	}
 	int len = 1;
-	while (node->Next != nullptr)
+	while (node->Next != nullptr && node->Next != Head)
 	{
 		len++;
 		node = node->Next;
@@ -128,7 +182,7 @@ shared_ptr<Node<T>> LinkedList<T>::Last()
 	{
 		throw;
 	}
-	while (node->Next != nullptr)
+	while (node->Next != nullptr && node->Next != Head)
 	{
 		node = node->Next;
 	}
@@ -138,14 +192,24 @@ shared_ptr<Node<T>> LinkedList<T>::Last()
 template<typename T>
 void LinkedList<T>::Insert(T value)
 {
+	shared_ptr<Node<T>> newNode = std::make_shared<Node<T>>(value);
 	if (Head == nullptr)
 	{
-		Head = std::make_shared<Node<T>>(value);
-		return;
+		Head = newNode;
+		last = Head;
 	}
-	shared_ptr<Node<T>> node = Last();
-	node->Next = std::make_shared<Node<T>>(value);
-	node->Next->Previous = node;
+	else
+	{
+		shared_ptr<Node<T>> node = last;
+		node->Next = newNode;
+		node->Next->Previous = node;
+		last = newNode;
+	}
+	if (Circular)
+	{
+		newNode->Next = Head;
+		Head->Previous = newNode;
+	}
 }
 template<typename T>
 bool LinkedList<T>::Remove(T value)
@@ -165,13 +229,18 @@ bool LinkedList<T>::Remove(T value)
 	{
 		return false;
 	}
+	else if (nodeTwo->Value == value)
+	{
+		remove(nodeTwo);
+		return true;
+	}
 	while (true)
 	{
 		node = node->Next;
 		for (int i = 0; i < 2; i++)
 		{
 			nodeTwo = nodeTwo->Next;
-		    if (nodeTwo == nullptr)
+			if (nodeTwo == nullptr)
 			{
 				return false;
 			}
