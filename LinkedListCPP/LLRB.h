@@ -7,15 +7,42 @@ using std::shared_ptr;
 template <typename T>
 class RBNode
 {
+	typedef int(*comparer_func)(T, T);
 public:
 	shared_ptr<RBNode<T>> RightChild;
 	shared_ptr<RBNode<T>> LeftChild;
 	bool Red;
 	T Value;
-	RBNode(T);
+	RBNode(T, comparer_func);
 	void ColorFlip();
 	bool Insert(T);
+	int(*Comparer)(T, T);
+	shared_ptr<RBNode<T>> Rotate(shared_ptr<RBNode<T>>, bool);
 };
+
+template<typename T>
+shared_ptr<RBNode<T>> RBNode<T>::Rotate(shared_ptr<RBNode<T>> node, bool rotateLeft)
+{
+	if (rotateLeft)
+	{
+		node->RightChild->Red = false;
+		node->Red = true;
+		shared_ptr<RBNode<T>> newParent = node->RightChild;
+		node->RightChild = newParent->LeftChild;
+		newParent->LeftChild = node;
+		return newParent;
+	}
+	else
+	{
+		node->LeftChild->Red = false;
+		node->Red = true;
+		shared_ptr<RBNode<T>> newParent = node->LeftChild;
+		node->LeftChild = newParent->RightChild;
+		newParent->RightChild = node;
+		return newParent;
+	}
+
+}
 
 template<typename T>
 bool RBNode<T>::Insert(T value)
@@ -25,32 +52,44 @@ bool RBNode<T>::Insert(T value)
 	{
 		ColorFlip();
 	}
-	if (value == Value)
+	if ((*Comparer)(value, Value) == 0)
 	{
 		return false;
 	}
-	if (value > Value)
+	else if ((*Comparer)(value, Value) > 0)
 	{
 		if (RightChild == nullptr)
 		{
-			RightChild = std::make_shared<RBNode<T>>(value);
+			RightChild = std::make_shared<RBNode<T>>(value, Comparer);
 		}
 		else
 		{
 			result = RightChild.Insert(value);
 		}
 	}
-	if (value < Value)
+	else
 	{
 		result = LeftChild.Insert(value);
 	}
+
+	if (RightChild != nullptr && IsRed(RightChild->RightChild))
+	{
+		RightChild = Rotate(RightChild, true);
+	}
+	if (LeftChild != nullptr && IsRed(LeftChild->RightChild))
+	{
+		LeftChild = Rotate(LeftChild, true);
+	}
+
+	return result;
 }
 
 template<typename T>
-RBNode<T>::RBNode(T value)
+RBNode<T>::RBNode(T value, comparer_func comparer)
 {
 	this->Value = value;
 	Red = true;
+	this->Comparer = comparer;
 }
 
 template<typename T>
@@ -71,10 +110,13 @@ void RBNode<T>::ColorFlip()
 template<typename T>
 class LLRBTree
 {
+	typedef int(*comparer_func)(T, T);
 public:
 	shared_ptr<RBNode<T>> Head;
 	bool Insert(T);
 	int(*Comparer)(T, T);
+	LLRBTree(comparer_func);
+	LLRBTree();
 };
 
 template<typename T>
@@ -93,11 +135,25 @@ bool LLRBTree<T>::Insert(T value)
 {
 	if (Head == nullptr)
 	{
-		shared_ptr<RBNode<T>> newNode = std::make_shared<RBNode<T>>(value);
+		shared_ptr<RBNode<T>> newNode = std::make_shared<RBNode<T>>(value, Comparer);
 		Head = newMode;
 		Head->Red = false;
 		return true;
 	}
 
-	return Head->Insert(value);
+	bool result = Head->Insert(value);
+	;//Add checks
+	return result;
+}
+
+template<typename T>
+LLRBTree<T>::LLRBTree(comparer_func comparer)
+{
+	this->Comparer = comparer;
+}
+
+template<typename T>
+LLRBTree<T>::LLRBTree()
+{
+
 }

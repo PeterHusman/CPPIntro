@@ -6,8 +6,13 @@ void TestF();
 
 int main()
 {
-	LLRBTree<int> llrboi{};
+	LLRBTree<int> llrboi{&Compare};
 
+}
+
+int Compare(int a, int b)
+{
+	return a - b;
 }
 
 
