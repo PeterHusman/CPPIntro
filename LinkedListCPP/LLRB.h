@@ -4,6 +4,7 @@
 using std::unique_ptr;
 using std::shared_ptr;
 
+
 template <typename T>
 class RBNode
 {
@@ -17,11 +18,11 @@ public:
 	void ColorFlip();
 	bool Insert(T);
 	int(*Comparer)(T, T);
-	shared_ptr<RBNode<T>> Rotate(shared_ptr<RBNode<T>>, bool);
+	
 };
 
 template<typename T>
-shared_ptr<RBNode<T>> RBNode<T>::Rotate(shared_ptr<RBNode<T>> node, bool rotateLeft)
+shared_ptr<RBNode<T>> Rotate(shared_ptr<RBNode<T>> node, bool rotateLeft)
 {
 	if (rotateLeft)
 	{
@@ -64,12 +65,12 @@ bool RBNode<T>::Insert(T value)
 		}
 		else
 		{
-			result = RightChild.Insert(value);
+			result = RightChild->Insert(value);
 		}
 	}
 	else
 	{
-		result = LeftChild.Insert(value);
+		result = LeftChild->Insert(value);
 	}
 
 	if (RightChild != nullptr && IsRed(RightChild->RightChild))
@@ -80,7 +81,14 @@ bool RBNode<T>::Insert(T value)
 	{
 		LeftChild = Rotate(LeftChild, true);
 	}
-
+	if (RightChild != nullptr && IsRed(RightChild->LeftChild) && IsRed(RightChild->LeftChild->LeftChild))
+	{
+		RightChild = Rotate(RightChild, false);
+	}
+	if (LeftChild != nullptr && IsRed(LeftChild->LeftChild) && IsRed(LeftChild->LeftChild->LeftChild))
+	{
+		LeftChild = Rotate(LeftChild, false);
+	}
 	return result;
 }
 
@@ -136,13 +144,21 @@ bool LLRBTree<T>::Insert(T value)
 	if (Head == nullptr)
 	{
 		shared_ptr<RBNode<T>> newNode = std::make_shared<RBNode<T>>(value, Comparer);
-		Head = newMode;
+		Head = newNode;
 		Head->Red = false;
 		return true;
 	}
 
 	bool result = Head->Insert(value);
-	;//Add checks
+
+	if (IsRed(Head->RightChild))
+	{
+		Head = Rotate(Head, true);
+	}
+	if (IsRed(Head->LeftChild) && IsRed(Head->LeftChild->LeftChild))
+	{
+		Head = Rotate(Head, false);
+	}
 	return result;
 }
 
