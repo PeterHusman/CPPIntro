@@ -48,7 +48,7 @@ shared_ptr<RBNode<T>> Rotate(shared_ptr<RBNode<T>> node, bool rotateLeft)
 template<typename T>
 bool RBNode<T>::Insert(T value)
 {
-	bool result;
+	bool result = true;
 	if (IsRed(LeftChild) && IsRed(RightChild))
 	{
 		ColorFlip();
@@ -159,6 +159,7 @@ bool LLRBTree<T>::Insert(T value)
 	{
 		Head = Rotate(Head, false);
 	}
+	Head->Red = false;
 	return result;
 }
 

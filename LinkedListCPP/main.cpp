@@ -13,7 +13,7 @@ int main()
 	LLRBTree<int> llrboi{ &Compare };
 	while (true)
 	{
-		VisualizeLLRB(llrboi.Head, 20);
+		VisualizeLLRB(llrboi.Head, 80);
 		std::string input{};
 		std::cin >> input;
 		char op = input.substr(0, 1).front();
@@ -36,25 +36,26 @@ void VisualizeLLRB(shared_ptr<RBNode<int>> head, int distance)
 	{
 		return;
 	}
-	for (int i = 0; i < distance; i++)
-	{
-		std::cout << " ";
-	}
 	std::deque<shared_ptr<RBNode<int>>> deque{};
 	int level = 0;
 	deque.emplace_back(head);
 	int i = 0;
+	int numNull = 0;
+	int actualDist = distance;
+	for (int j = 0; j < actualDist; j++)
+	{
+		std::cout << " ";
+	}
+	const char esc = 27;
 	while (!deque.empty())
 	{
 		int len = 0;
 		shared_ptr<RBNode<int>> node = deque.front();
 		deque.pop_front();
-		deque.emplace_back(node->LeftChild);
-		deque.emplace_back(node->RightChild);
 		if (IsRed(node))
 		{
-			std::cout << "R";
 			len++;
+			std::cout << esc << "[31mR" << esc << "[0m";
 		}
 		else if (node != nullptr)
 		{
@@ -63,9 +64,19 @@ void VisualizeLLRB(shared_ptr<RBNode<int>> head, int distance)
 		}
 		if (node != nullptr)
 		{
+			numNull = 0;
 			std::cout << node->Value;
+			len += (std::to_string(node->Value)).size();
+			deque.emplace_back(node->LeftChild);
+			deque.emplace_back(node->RightChild);
 		}
-		for (int j = 0; j < (distance - len); j++)
+		else
+		{
+			numNull++;
+			deque.emplace_back(nullptr);
+			deque.emplace_back(nullptr);
+		}
+		for (int j = 0; j < (distance * 2 - len); j++)
 		{
 			std::cout << " ";
 		}
@@ -73,8 +84,19 @@ void VisualizeLLRB(shared_ptr<RBNode<int>> head, int distance)
 		if (i >= pow(2, level))
 		{
 			distance = distance / 2;
-			i = 0;
+			actualDist = distance;
+			level++;
 			std::cout << std::endl;
+			if (numNull == i)
+			{
+				return;
+			}
+			for (int j = 0; j < actualDist; j++)
+			{
+				std::cout << " ";
+			}
+			i = 0;
+			numNull = 0;
 		}
 	}
 
