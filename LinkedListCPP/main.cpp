@@ -4,12 +4,31 @@
 #include <deque>
 #include "Node.h"
 #include "LLRB.h"
+
+#include <vector>
+
 void TestF();
 int Compare(int, int);
 void VisualizeLLRB(shared_ptr<RBNode<int>>, int);
 
 int main()
 {
+	//int a = 4;
+	//int b = 2;
+
+	//float c = 3;
+	//float d = 12;
+
+	//std::vector<int> e;
+	//std::vector<int> f;
+
+	//add2(a, b);
+
+
+	//add2<double, 18>(c, d);
+	//add(e, f);
+
+
 	LLRBTree<int> llrboi{ &Compare };
 	while (true)
 	{
@@ -25,6 +44,10 @@ int main()
 		if (op == 'i')
 		{
 			llrboi.Insert(n);
+		}
+		else if (op == 'r')
+		{
+			llrboi.Remove(n);
 		}
 	}
 }

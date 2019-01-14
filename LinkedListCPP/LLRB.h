@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <iostream>
 
 using std::unique_ptr;
 using std::shared_ptr;
@@ -17,9 +18,31 @@ public:
 	RBNode(T, comparer_func);
 	void ColorFlip();
 	bool Insert(T);
+	bool Remove(T);
+	void MoveRedRight();
+	void MoveRedLeft();
 	int(*Comparer)(T, T);
 	
 };
+
+
+template<typename T>
+void RBNode<T>::MoveRedRight()
+{
+
+}
+
+template<typename T>
+void RBNode<T>::MoveRedLeft()
+{
+
+}
+
+template<typename T>
+bool RBNode<T>::Remove(T value)
+{
+	if()
+}
 
 template<typename T>
 shared_ptr<RBNode<T>> Rotate(shared_ptr<RBNode<T>> node, bool rotateLeft)
@@ -122,10 +145,66 @@ class LLRBTree
 public:
 	shared_ptr<RBNode<T>> Head;
 	bool Insert(T);
+	bool Remove(T);
 	int(*Comparer)(T, T);
 	LLRBTree(comparer_func);
 	LLRBTree();
 };
+
+template<typename T>
+bool LLRBTree<T>::Remove(T value)
+{
+	if (Head == nullptr)
+	{
+		return false;
+	}
+
+	Head->Remove(value);
+}
+
+
+//
+//template <typename T, int V = 4>
+//T add2(T a, T b)
+//{
+//	T data[V];
+//	std::cout << "Integral Enable If" << std::endl;
+//	return a + b;
+//}
+
+
+//template <typename T>
+//void add(T a, T b, typename std::enable_if <!std::is_integral<T>::value && !std::is_floating_point<T>::value>::type* = 0)
+//{
+//	std::cout << "Non Enabled If" << std::endl;
+//}
+
+//struct MyStruct;
+//
+//template <typename T>
+//T add(T a, T b)
+//{
+//	if constexpr (std::is_integral<T>::value) {
+//		printf("Integral Enable If\n");
+//		return a + b;
+//		//return;
+//	}
+//	else if constexpr (std::is_floating_point<T>::value) {
+//		printf("Floating Enable If\n");
+//		return a - b;
+//		//return;
+//	}
+//	else if constexpr (std::is_same<T, MyStruct>::value) {
+//		printf("Custom Thing\n");
+//		return a;
+//	}
+//	else {
+//		printf("Total Else");
+//		return b;
+//	}
+//}
+
+
 
 template<typename T>
 bool IsRed(shared_ptr<RBNode<T>> node)
@@ -172,5 +251,4 @@ LLRBTree<T>::LLRBTree(comparer_func comparer)
 template<typename T>
 LLRBTree<T>::LLRBTree()
 {
-
 }
