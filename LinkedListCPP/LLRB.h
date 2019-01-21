@@ -18,31 +18,44 @@ public:
 	RBNode(T, comparer_func);
 	void ColorFlip();
 	bool Insert(T);
-	bool Remove(T);
-	void MoveRedRight();
-	void MoveRedLeft();
+	shared_ptr<RBNode<T>> MoveRedRight();
+	shared_ptr<RBNode<T>> MoveRedLeft();
 	int(*Comparer)(T, T);
 	
 };
 
 
 template<typename T>
-void RBNode<T>::MoveRedRight()
+shared_ptr<RBNode<T>> RBNode<T>::MoveRedRight()
 {
-
+	auto ptr = this;
+	ColorFlip();
+	if (LeftChild != nullptr && IsRed(LeftChild->LeftChild))
+	{
+		ptr = Rotate(ptr, false);
+		ColorFlip();
+	}
+	return ptr;
 }
 
 template<typename T>
-void RBNode<T>::MoveRedLeft()
+shared_ptr<RBNode<T>> RBNode<T>::MoveRedLeft()
 {
-
+	auto ptr = this;
+	ColorFlip();
+	if (RightChild != nullptr && IsRed(RightChild->LeftChild))
+	{
+		RightChild = Rotate(RightChild, false);
+		ptr = Rotate(ptr, true);
+		if (RightChild != nullptr && IsRed(RightChild->RightChild))
+		{
+			RightChild = Rotate(RightChild, true);
+		}
+		ColorFlip();
+	}
+	return ptr;
 }
 
-template<typename T>
-bool RBNode<T>::Remove(T value)
-{
-	if()
-}
 
 template<typename T>
 shared_ptr<RBNode<T>> Rotate(shared_ptr<RBNode<T>> node, bool rotateLeft)
@@ -142,24 +155,64 @@ template<typename T>
 class LLRBTree
 {
 	typedef int(*comparer_func)(T, T);
+private:
+	shared_ptr<RBNode<T>> RecursiveRemove(shared_ptr<RBNode<T>>, T);
+	
 public:
 	shared_ptr<RBNode<T>> Head;
+	int Count;
 	bool Insert(T);
 	bool Remove(T);
 	int(*Comparer)(T, T);
 	LLRBTree(comparer_func);
 	LLRBTree();
+	~LLRBTree();
 };
+
+template<typename T>
+shared_ptr<RBNode<T>> LLRBTree<T>::RecursiveRemove(shared_ptr<RBNode<T>> node, T value)
+{
+	if ((*Comparer)(value, node->Value) < 0)
+	{
+		if (node->LeftChild == nullptr)
+		{
+			return false;
+		}
+		if (!IsRed(node->LeftChild) && !IsRed(node->LeftChild->LeftChild))
+		{
+
+
+			return node->LeftChild->Remove(value);
+		}
+	}
+	else
+	{
+		if (IsRed(node->LeftChild))
+		{
+
+		}
+	}
+}
 
 template<typename T>
 bool LLRBTree<T>::Remove(T value)
 {
-	if (Head == nullptr)
+	int initCount = Count;
+	if (Head != nullptr)
 	{
-		return false;
+		Head = RecursiveRemove(Head, value);
+		if (Head != nullptr)
+		{
+			Head->Red = false;
+		}
 	}
+	return initCount != Count;
+}
 
-	Head->Remove(value);
+template<typename T>
+LLRBTree<T>::~LLRBTree()
+{
+	//Comparer.Dispose();
 }
 
 
@@ -225,11 +278,15 @@ bool LLRBTree<T>::Insert(T value)
 		shared_ptr<RBNode<T>> newNode = std::make_shared<RBNode<T>>(value, Comparer);
 		Head = newNode;
 		Head->Red = false;
+		Count++;
 		return true;
 	}
 
 	bool result = Head->Insert(value);
-
+	if (result)
+	{
+		Count++;
+	}
 	if (IsRed(Head->RightChild))
 	{
 		Head = Rotate(Head, true);
@@ -245,6 +302,7 @@ bool LLRBTree<T>::Insert(T value)
 template<typename T>
 LLRBTree<T>::LLRBTree(comparer_func comparer)
 {
+	Count = 0;
 	this->Comparer = comparer;
 }
 
