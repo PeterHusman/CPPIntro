@@ -18,43 +18,9 @@ public:
 	RBNode(T, comparer_func);
 	void ColorFlip();
 	bool Insert(T);
-	shared_ptr<RBNode<T>> MoveRedRight();
-	shared_ptr<RBNode<T>> MoveRedLeft();
 	int(*Comparer)(T, T);
-	
+
 };
-
-
-template<typename T>
-shared_ptr<RBNode<T>> RBNode<T>::MoveRedRight()
-{
-	auto ptr = this;
-	ColorFlip();
-	if (LeftChild != nullptr && IsRed(LeftChild->LeftChild))
-	{
-		ptr = Rotate(ptr, false);
-		ColorFlip();
-	}
-	return ptr;
-}
-
-template<typename T>
-shared_ptr<RBNode<T>> RBNode<T>::MoveRedLeft()
-{
-	auto ptr = this;
-	ColorFlip();
-	if (RightChild != nullptr && IsRed(RightChild->LeftChild))
-	{
-		RightChild = Rotate(RightChild, false);
-		ptr = Rotate(ptr, true);
-		if (RightChild != nullptr && IsRed(RightChild->RightChild))
-		{
-			RightChild = Rotate(RightChild, true);
-		}
-		ColorFlip();
-	}
-	return ptr;
-}
 
 
 template<typename T>
@@ -157,7 +123,7 @@ class LLRBTree
 	typedef int(*comparer_func)(T, T);
 private:
 	shared_ptr<RBNode<T>> RecursiveRemove(shared_ptr<RBNode<T>>, T);
-	
+
 public:
 	shared_ptr<RBNode<T>> Head;
 	int Count;
@@ -165,33 +131,131 @@ public:
 	bool Remove(T);
 	int(*Comparer)(T, T);
 	LLRBTree(comparer_func);
+	shared_ptr<RBNode<T>> MoveRedLeft(shared_ptr<RBNode<T>>);
+	shared_ptr<RBNode<T>> MoveRedRight(shared_ptr<RBNode<T>>);
+	shared_ptr<RBNode<T>> GetMinimum(shared_ptr<RBNode<T>>);
+	shared_ptr<RBNode<T>> Fixup(shared_ptr<RBNode<T>>);
 	LLRBTree();
 	~LLRBTree();
 };
+
+template<typename T>
+shared_ptr<RBNode<T>> LLRBTree<T>::MoveRedRight(shared_ptr<RBNode<T>> node)
+{
+	if (node == nullptr)
+	{
+		return nullptr;
+	}
+	node->ColorFlip();
+	if (node->LeftChild != nullptr && IsRed(node->LeftChild->LeftChild))
+	{
+		node = Rotate(node, false);
+		node->ColorFlip();
+	}
+	return node;
+}
+
+template<typename T>
+shared_ptr<RBNode<T>> LLRBTree<T>::MoveRedLeft(shared_ptr<RBNode<T>> node)
+{
+	node->ColorFlip();
+	if (node->RightChild != nullptr && IsRed(node->RightChild->LeftChild))
+	{
+		node->RightChild = Rotate(node->RightChild, false);
+		node = Rotate(node, true);
+		if (node->RightChild != nullptr && IsRed(node->RightChild->RightChild))
+		{
+			node->RightChild = Rotate(node->RightChild, true);
+		}
+		node->ColorFlip();
+	}
+	return node;
+}
 
 template<typename T>
 shared_ptr<RBNode<T>> LLRBTree<T>::RecursiveRemove(shared_ptr<RBNode<T>> node, T value)
 {
 	if ((*Comparer)(value, node->Value) < 0)
 	{
-		if (node->LeftChild == nullptr)
-		{
-			return false;
-		}
-		if (!IsRed(node->LeftChild) && !IsRed(node->LeftChild->LeftChild))
+		if (node->LeftChild != nullptr)
 		{
 
+			if (!IsRed(node->LeftChild) && !IsRed(node->LeftChild->LeftChild))
+			{
+				node = MoveRedLeft(node);
+			}
 
-			return node->LeftChild->Remove(value);
+			node->LeftChild = RecursiveRemove(node->LeftChild, value);
 		}
 	}
 	else
 	{
 		if (IsRed(node->LeftChild))
 		{
+			node = Rotate(node, false);
+		}
+		if ((*Comparer)(value, node->Value) == 0 && node->RightChild == nullptr)
+		{
+			Count--;
+			return nullptr;
+		}
 
+		if (node->RightChild != nullptr)
+		{
+			if (!IsRed(node->RightChild) && !IsRed(node->RightChild->LeftChild))
+			{
+				node = MoveRedRight(node);
+			}
+			if ((*Comparer)(value, node->Value) == 0)
+			{
+				shared_ptr<RBNode<T>> minNode = GetMinimum(node->RightChild);
+				node->Value = minNode->Value;
+				node->RightChild = RecursiveRemove(node->RightChild, minNode->Value);
+			}
+			else
+			{
+				node->RightChild = RecursiveRemove(node->RightChild, value);
+			}
 		}
 	}
+
+	return Fixup(node);
+}
+
+template<typename T>
+shared_ptr<RBNode<T>> LLRBTree<T>::Fixup(shared_ptr<RBNode<T>> node)
+{
+	if (IsRed(node->RightChild))
+	{
+		node = Rotate(node, true);
+	}
+	if (IsRed(node->LeftChild) && IsRed(node->LeftChild->LeftChild))
+	{
+		node = Rotate(node, false);
+	}
+	if (IsRed(node->LeftChild) && IsRed(node->RightChild))
+	{
+		node->ColorFlip();
+	}
+	if (node->LeftChild != nullptr && IsRed(node->LeftChild->RightChild) && !IsRed(node->LeftChild->LeftChild))
+	{
+		node->LeftChild = Rotate(node->LeftChild, true);
+		if (IsRed(node->LeftChild))
+		{
+			node = Rotate(node, false);
+		}
+	}
+	return node;
+}
+
+template<typename T>
+shared_ptr<RBNode<T>> LLRBTree<T>::GetMinimum(shared_ptr<RBNode<T>> node)
+{
+	while (node->LeftChild != nullptr)
+	{
+		node = node->LeftChild;
+	}
+	return node;
 }
 
 template<typename T>

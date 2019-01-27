@@ -52,6 +52,16 @@ int main()
 	}
 }
 
+int Power(int base, int exponent)
+{
+	int output = 1;
+	for (int i = 0; i < exponent; i++)
+	{
+		output *= base;
+	}
+	return output;
+}
+
 void VisualizeLLRB(shared_ptr<RBNode<int>> head, int distance)
 {
 	system("CLS");
