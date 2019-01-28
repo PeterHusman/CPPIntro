@@ -22,13 +22,12 @@ public:
 
 };
 
-
 template<typename T>
 shared_ptr<RBNode<T>> Rotate(shared_ptr<RBNode<T>> node, bool rotateLeft)
 {
 	if (rotateLeft)
 	{
-		node->RightChild->Red = false;
+		node->RightChild->Red = node->Red;
 		node->Red = true;
 		shared_ptr<RBNode<T>> newParent = node->RightChild;
 		node->RightChild = newParent->LeftChild;
@@ -37,7 +36,7 @@ shared_ptr<RBNode<T>> Rotate(shared_ptr<RBNode<T>> node, bool rotateLeft)
 	}
 	else
 	{
-		node->LeftChild->Red = false;
+		node->LeftChild->Red = node->Red;
 		node->Red = true;
 		shared_ptr<RBNode<T>> newParent = node->LeftChild;
 		node->LeftChild = newParent->RightChild;
@@ -163,11 +162,12 @@ shared_ptr<RBNode<T>> LLRBTree<T>::MoveRedLeft(shared_ptr<RBNode<T>> node)
 	{
 		node->RightChild = Rotate(node->RightChild, false);
 		node = Rotate(node, true);
+		node->ColorFlip();
 		if (node->RightChild != nullptr && IsRed(node->RightChild->RightChild))
 		{
 			node->RightChild = Rotate(node->RightChild, true);
 		}
-		node->ColorFlip();
+		
 	}
 	return node;
 }
@@ -276,7 +276,6 @@ bool LLRBTree<T>::Remove(T value)
 template<typename T>
 LLRBTree<T>::~LLRBTree()
 {
-	//Comparer.Dispose();
 }
 
 
