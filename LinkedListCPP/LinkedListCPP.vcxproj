@@ -119,6 +119,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Graphs.h" />
     <ClInclude Include="LLRB.h" />
     <ClInclude Include="Node.h" />
   </ItemGroup>
