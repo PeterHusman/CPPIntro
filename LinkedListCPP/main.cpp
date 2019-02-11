@@ -4,6 +4,7 @@
 #include <deque>
 #include "Node.h"
 #include "LLRB.h"
+#include "Graphs.h"
 
 #include <vector>
 
@@ -13,6 +14,50 @@ void VisualizeLLRB(shared_ptr<RBNode<int>>, int);
 
 int main()
 {
+	Graph<int> goi{};
+	while (true)
+	{
+		std::string input{};
+		std::cin >> input;
+		char op = input.substr(0, 1).front();
+		int value;
+		int value2;
+		int value3;
+		if (input.size() > 1)
+		{
+			size_t index = input.find_first_of(',');
+			if (index == std::string::npos)
+			{
+				value = std::stoi(input.substr(1, input.size()-1));
+			}
+			else
+			{
+				value = std::stoi(input.substr(1, index - 1));
+				size_t index2 = input.find_last_of(',');
+				value2 = std::stoi(input.substr(index + 1, index2 - 1));
+				value3 = std::stoi(input.substr(index2 + 1, input.size()));
+			}
+		}
+		if (op == 'n')
+		{
+			goi.AddVertex(value);
+		}
+		else if (op == 'e')
+		{
+			goi.AddEdge(goi.LinearSearch(value), goi.LinearSearch(value2), value3, true);
+		}
+	}
+}
+
+
+int llrbMain()
+{
+	////std::chrono::time_point<std::chrono::steady_clock> epoch = std::chrono::steady_clock::now();
+
+	////if (std::chrono::steady_clock::now() > epoch + std::chrono::milliseconds(50)) {
+
+	////}
+
 	//int a = 4;
 	//int b = 2;
 

@@ -50,16 +50,19 @@ Edge<T>::Edge(NodePtr start, NodePtr end, double cost)
 template<typename T>
 class Graph
 {
+private:
+	shared_ptr<GraphNode<T>> DepthFirstRecursive(T, shared_ptr<GraphNode<T>>, set<GraphNode<T>*>&);
 public:
 	vector<shared_ptr<GraphNode<T>>> Nodes;
 	vector<shared_ptr<Edge<T>>> Edges;
 	Graph();
-	bool AddEdge(shared_ptr<GraphNode<T>>, shared_ptr<GraphNode<T>>, double);
+	bool AddEdge(shared_ptr<GraphNode<T>>, shared_ptr<GraphNode<T>>, double, bool);
 	bool RemoveEdge(shared_ptr<GraphNode<T>>, shared_ptr<GraphNode<T>>);
-	bool AddVertex(T);
+	shared_ptr<GraphNode<T>> AddVertex(T);
 	bool RemoveVertex(T);
-	shared_ptr<GraphNode<T>> BreadthFirst(T);
-	shared_ptr<GraphNode<T>> DepthFirst(T);
+	shared_ptr<GraphNode<T>> BreadthFirst(T, shared_ptr<GraphNode<T>>);
+	shared_ptr<GraphNode<T>> DepthFirst(T, shared_ptr<GraphNode<T>>);
+	shared_ptr<GraphNode<T>> LinearSearch(T);
 };
 
 template<typename T>
@@ -68,12 +71,17 @@ Graph<T>::Graph()
 }
 
 template<typename T>
-bool Graph<T>::AddEdge(shared_ptr<GraphNode<T>> start, shared_ptr<GraphNode<T>> end, double cost)
+bool Graph<T>::AddEdge(shared_ptr<GraphNode<T>> start, shared_ptr<GraphNode<T>> end, double cost, bool overrideIfAlreadyPresent)
 {
 	for (shared_ptr<Edge<T>> edge : Edges)
 	{
 		if (edge->Start == start && edge->End == end)
 		{
+			if (overrideIfAlreadyPresent)
+			{
+				edge->Cost = cost;
+				return true;
+			}
 			return false;
 		}
 	}
@@ -99,17 +107,18 @@ bool Graph<T>::RemoveEdge(shared_ptr<GraphNode<T>> start, shared_ptr<GraphNode<T
 }
 
 template<typename T>
-bool Graph<T>::AddVertex(T value)
+shared_ptr<GraphNode<T>> Graph<T>::AddVertex(T value)
 {
 	for (shared_ptr<GraphNode<T>> node : Nodes)
 	{
 		if (node->Value == value)
 		{
-			return false;
+			return nullptr;
 		}
 	}
-	Nodes.push_back(std::make_shared<GraphNode<T>>(value));
-	return true;
+	auto nodePtr = std::make_shared<GraphNode<T>>(value);
+	Nodes.push_back(nodePtr);
+	return nodePtr;
 }
 
 template<typename T>
@@ -130,25 +139,25 @@ bool Graph<T>::RemoveVertex(T value)
 }
 
 template<typename T>
-shared_ptr<GraphNode<T>> Graph<T>::BreadthFirst(T value)
+shared_ptr<GraphNode<T>> Graph<T>::BreadthFirst(T value, shared_ptr<GraphNode<T>> start)
 {
-	set<shared_ptr<GraphNode<T>>> visited{};
+	set<GraphNode<T>*> visited{};
 	deque<shared_ptr<GraphNode<T>>> queue{};
-	queue.push_back(Nodes.front());
+	queue.push_back(start);
 	while (true)
 	{
 		auto current = queue.front();
 		queue.pop_front();
 		for (shared_ptr<Edge<T>> edge : Edges)
 		{
-			if (edge->Start == current && visited.count(edge->End) == 0)
+			if (edge->Start == current && visited.count(edge->End.get()) == 0)
 			{
 				if (edge->End->Value)
 				{
 					return edge->End;
 				}
 				queue.push_back(edge->End);
-				visited.insert(edge->End);
+				visited.insert(edge->End.get());
 			}
 		}
 		if (queue.empty())
@@ -159,7 +168,39 @@ shared_ptr<GraphNode<T>> Graph<T>::BreadthFirst(T value)
 }
 
 template<typename T>
-shared_ptr<GraphNode<T>> Graph<T>::DepthFirst(T value)
+shared_ptr<GraphNode<T>> Graph<T>::DepthFirst(T value, shared_ptr<GraphNode<T>> start)
 {
+	set<GraphNode<T>*> visited{};
+	return DepthFirstRecursive(value, start, visited);
+}
 
+template<typename T>
+shared_ptr<GraphNode<T>> Graph<T>::DepthFirstRecursive(T value, shared_ptr<GraphNode<T>> node, set<GraphNode<T>*>& visited )
+{
+	for (shared_ptr<Edge<T>> edge : Edges)
+	{
+		if (edge->Start == node && visited.count(edge->End.get()) == 0)
+		{
+			visited.insert(edge->End.get());
+			auto potentialOut = DepthFirstRecursive(value, edge->End, visited);
+			if (potentialOut != nullptr)
+			{
+				return potentialOut;
+			}
+		}
+	}
+	return nullptr;
+}
+
+template<typename T>
+shared_ptr<GraphNode<T>> Graph<T>::LinearSearch(T value)
+{
+	for (shared_ptr<GraphNode<T>> node : Nodes)
+	{
+		if (value == node->Value)
+		{
+			return node;
+		}
+	}
+	return nullptr;
 }
