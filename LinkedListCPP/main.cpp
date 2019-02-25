@@ -7,6 +7,7 @@
 #include "Graphs.h"
 
 #include <vector>
+#include <array>
 
 void TestF();
 int Compare(int, int);
@@ -14,6 +15,9 @@ void VisualizeLLRB(shared_ptr<RBNode<int>>, int);
 
 int main()
 {
+
+	std::array<std::array<int, 15>, 15> positions;
+
 	Graph<int> goi{};
 	while (true)
 	{
@@ -45,6 +49,11 @@ int main()
 		else if (op == 'e')
 		{
 			goi.AddEdge(goi.LinearSearch(value), goi.LinearSearch(value2), value3, true);
+		}
+
+		for (auto&& node : goi.Nodes)
+		{
+			//Add draw-er
 		}
 	}
 }
