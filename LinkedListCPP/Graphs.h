@@ -93,10 +93,10 @@ template<typename T>
 bool Graph<T>::RemoveEdge(shared_ptr<GraphNode<T>> start, shared_ptr<GraphNode<T>> end)
 {
 	auto iterator = Edges.begin();
-	auto end = Edges.end();
-	while(iterator != end)
+	auto End = Edges.end();
+	while(iterator != End)
 	{
-		if (iterator->Start == start && iterator->End == end)
+		if ((*iterator)->Start == start && (*iterator)->End == end)
 		{
 			Edges.erase(iterator);
 			return true;
@@ -128,7 +128,7 @@ bool Graph<T>::RemoveVertex(T value)
 	auto end = Nodes.end();
 	while (iterator != end)
 	{
-		if (iterator->Value == value)
+		if ((*iterator)->Value == value)
 		{
 			Nodes.erase(iterator);
 			return true;

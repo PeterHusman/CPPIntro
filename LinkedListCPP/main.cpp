@@ -15,8 +15,9 @@ void VisualizeLLRB(shared_ptr<RBNode<int>>, int);
 
 int main()
 {
-
-	std::array<std::array<int, 15>, 15> positions;
+	std::array<std::array<int, 70>, 70> positions;
+	int radius = 30;
+	const char esc = 27;
 
 	Graph<int> goi{};
 	while (true)
@@ -42,7 +43,11 @@ int main()
 				value3 = std::stoi(input.substr(index2 + 1, input.size()));
 			}
 		}
-		if (op == 'n')
+		else if (input.size() <= 0)
+		{
+			op = ' ';
+		}
+		if (op == 'i')
 		{
 			goi.AddVertex(value);
 		}
@@ -50,10 +55,78 @@ int main()
 		{
 			goi.AddEdge(goi.LinearSearch(value), goi.LinearSearch(value2), value3, true);
 		}
+		else if (op == 'r')
+		{
+			goi.RemoveVertex(value);
+		}
+		else if (op == 'R')
+		{
+			goi.RemoveEdge(goi.LinearSearch(value), goi.LinearSearch(value2));
+		}
+		else if (op == 'c')
+		{
+			auto node = goi.LinearSearch(value);
+			for (auto&& edge : goi.Edges)
+			{
+				if (edge->Start == node)
+				{
+					edge->End->Value *= -1;
+				}
+			} 
+		}
 
+		for (auto&& row : positions)
+		{
+			row.fill(32767);
+		}
+
+		int i = 0;
+		int len = goi.Nodes.size(); 
 		for (auto&& node : goi.Nodes)
 		{
-			//Add draw-er
+			double angle = 2 * 3.141592653589793238462643383f * (double)i / (double)len;
+			positions[(int)(sin(angle) * radius) + radius][(int)(cos(angle) * radius) + radius] = node->Value;
+			if (node->Value < 0)
+			{
+				node->Value *= -1;
+			}
+			i++;
+		}
+		system("CLS");
+		for (auto&& row : positions)
+		{
+			int xtra = 0;
+			for (auto&& pixel : row)
+			{
+				if (pixel != 32767)
+				{
+					bool resetColor = false;
+					if (pixel < 0)
+					{
+						pixel *= -1;
+						resetColor = true;
+						std::cout << esc << "[31m";
+					}
+					std::cout << pixel;
+					xtra = (int)log10(pixel);
+					if (resetColor)
+					{
+						std::cout << esc << "[0m";
+					}
+				}
+				else
+				{
+					if (xtra == 0)
+					{
+						std::cout << " ";
+					}
+					else
+					{
+						xtra--;
+					}
+				}
+			}
+			std::cout << std::endl;
 		}
 	}
 }
