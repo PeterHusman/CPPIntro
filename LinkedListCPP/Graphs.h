@@ -4,6 +4,9 @@
 #include <vector>
 #include <deque>
 #include <set>
+#include <queue>
+#include <concurrent_priority_queue.h>
+#include <stack>
 
 using std::unique_ptr;
 using std::shared_ptr;
@@ -11,6 +14,9 @@ using std::map;
 using std::vector;
 using std::deque;
 using std::set;
+using std::priority_queue;
+using std::queue;
+using std::stack;
 
 template<typename T>
 class GraphNode
@@ -63,6 +69,8 @@ public:
 	shared_ptr<GraphNode<T>> BreadthFirst(T, shared_ptr<GraphNode<T>>);
 	shared_ptr<GraphNode<T>> DepthFirst(T, shared_ptr<GraphNode<T>>);
 	shared_ptr<GraphNode<T>> LinearSearch(T);
+	stack<shared_ptr<GraphNode<T>>> Dijkstras(shared_ptr<GraphNode<T>>, shared_ptr<GraphNode<T>>);
+	stack<shared_ptr<GraphNode<T>>> AStar(shared_ptr<GraphNode<T>>, shared_ptr<GraphNode<T>>);
 };
 
 template<typename T>
@@ -203,4 +211,40 @@ shared_ptr<GraphNode<T>> Graph<T>::LinearSearch(T value)
 		}
 	}
 	return nullptr;
+}
+
+template<typename T>
+struct GraphNodeData
+{
+	bool Visited;
+	float Distance;
+	float FinalDistance;
+	shared_ptr<GraphNode<T>> Founder;
+	GraphNodeData(bool, float, float, shared_ptr<GraphNode<T>>);
+};
+
+template<typename T>
+GraphNodeData<T>::GraphNodeData(bool visited, float distance, float finalDistance, shared_ptr<GraphNode<T>> founder)
+{
+	Visited = visited;
+	Distance = distance;
+	FinalDistance = finalDistance;
+	Founder = founder;
+}
+
+template<typename T>
+stack<shared_ptr<GraphNode<T>>> Graph<T>::Dijkstras(shared_ptr<GraphNode<T>> start, shared_ptr<GraphNode<T>> end)
+{
+	map<GraphNode<T>*, GraphNodeData<T>> pathFindData{};
+	for (auto&& node : Nodes)
+	{
+		GraphNodeData<T> data{false, INFINITY, INFINITY, nullptr};
+		pathFindData.emplace(node.get(), data);
+	}
+}
+
+template<typename T>
+stack<shared_ptr<GraphNode<T>>> Graph<T>::AStar(shared_ptr<GraphNode<T>> start, shared_ptr<GraphNode<T>> end)
+{
+
 }
