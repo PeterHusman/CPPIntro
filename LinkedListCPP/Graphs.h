@@ -219,27 +219,64 @@ struct GraphNodeData
 	bool Visited;
 	float Distance;
 	float FinalDistance;
+	bool Queued;
 	shared_ptr<GraphNode<T>> Founder;
-	GraphNodeData(bool, float, float, shared_ptr<GraphNode<T>>);
+	GraphNodeData(bool, float, float, shared_ptr<GraphNode<T>>, bool);
 };
 
 template<typename T>
-GraphNodeData<T>::GraphNodeData(bool visited, float distance, float finalDistance, shared_ptr<GraphNode<T>> founder)
+GraphNodeData<T>::GraphNodeData(bool visited, float distance, float finalDistance, shared_ptr<GraphNode<T>> founder, bool queued)
 {
 	Visited = visited;
 	Distance = distance;
 	FinalDistance = finalDistance;
 	Founder = founder;
+	Queued = queued;
 }
 
 template<typename T>
 stack<shared_ptr<GraphNode<T>>> Graph<T>::Dijkstras(shared_ptr<GraphNode<T>> start, shared_ptr<GraphNode<T>> end)
 {
-	map<GraphNode<T>*, GraphNodeData<T>> pathFindData{};
+	map<GraphNode<T>*, shared_ptr<GraphNodeData<T>>> pathFindData{};
+	auto compare = [pathFindData](GraphNode<T>* left, GraphNode<T>* right)
+	{
+		float dist1 = pathFindData.at(left)->Distance;
+		return dist1 > pathFindData.at(right)->Distance;
+	};
+	priority_queue<GraphNode<T>*, vector<GraphNode<T>*>, decltype(compare)> priorityQ;
 	for (auto&& node : Nodes)
 	{
-		GraphNodeData<T> data{false, INFINITY, INFINITY, nullptr};
-		pathFindData.emplace(node.get(), data);
+		GraphNodeData<T> data{false, INFINITY, INFINITY, nullptr, false};
+		pathFindData.emplace(node.get(), std::make_shared<GraphNodeData<T>>(data));
+	}
+	pathFindData.at(start.get())->Distance = 0;
+	pathFindData.at(start.get())->Queued = true;
+	priorityQ.push(start.get());
+	while (true)
+	{
+		auto node = priorityQ.top();
+		pathFindData.at(node)->Queued = false;
+		priorityQ.pop();
+		for (auto&& edge : Edges)
+		{
+			if (edge->Start.get() == node)
+			{
+				auto end = edge->End.get();
+				auto endData = pathFindData.at(end);
+				if (endData->Distance > pathFindData.at(node)->Distance + edge->Cost)
+				{
+					endData->Visited = false;
+					endData->Distance = pathFindData.at(node)->Distance + edge->Cost;
+					endData->Founder = edge->Start;
+				}
+				if (!endData->Visited && !endData->Queued)
+				{
+					endData->Queued = true;
+					priorityQ.push(end);
+				}
+			}
+		}
+		pathFindData.at(node)->Visited = true;
 	}
 }
 
