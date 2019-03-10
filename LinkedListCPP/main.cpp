@@ -5,6 +5,7 @@
 #include "Node.h"
 #include "LLRB.h"
 #include "Graphs.h"
+#include <random>
 
 #include <vector>
 #include <array>
@@ -15,6 +16,9 @@ void VisualizeLLRB(shared_ptr<RBNode<int>>, int);
 
 int main()
 {
+	std::random_device rd;
+	std::mt19937 eng(rd());
+	
 	std::array<std::array<int, 70>, 70> positions;
 	int radius = 30;
 	const char esc = 27;
@@ -55,6 +59,24 @@ int main()
 		{
 			goi.AddEdge(goi.LinearSearch(value), goi.LinearSearch(value2), value3, true);
 		}
+		else if (op == 'N')
+		{
+			goi.Nodes.clear();
+			goi.Edges.clear();
+			for (int i = 0; i < value; i++)
+			{
+				goi.AddVertex(i);
+			}
+			std::uniform_int_distribution<> distr(0, value);
+			while (goi.BreadthFirst(value - 1, goi.Nodes[0]) == nullptr)
+			{
+				auto n1 = goi.Nodes[distr(eng)];
+				auto n2 = goi.Nodes[distr(eng)];
+				goi.AddEdge(n1, n2, 1, true);
+				goi.AddEdge(n2, n1, 1, true);
+
+			}
+		}
 		else if (op == 'r')
 		{
 			goi.RemoveVertex(value);
@@ -73,6 +95,16 @@ int main()
 					edge->End->Value *= -1;
 				}
 			} 
+		}
+		else if (op == 'd')
+		{
+			auto path = goi.Dijkstras(goi.LinearSearch(value), goi.LinearSearch(value3));
+			while (!path.empty())
+			{
+				std::cout << path.top()->Value << " ";
+				path.pop();
+			}
+			system("PAUSE");
 		}
 
 		for (auto&& row : positions)

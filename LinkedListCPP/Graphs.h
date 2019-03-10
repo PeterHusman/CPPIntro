@@ -238,17 +238,17 @@ template<typename T>
 stack<shared_ptr<GraphNode<T>>> Graph<T>::Dijkstras(shared_ptr<GraphNode<T>> start, shared_ptr<GraphNode<T>> end)
 {
 	map<GraphNode<T>*, shared_ptr<GraphNodeData<T>>> pathFindData{};
-	auto compare = [pathFindData](GraphNode<T>* left, GraphNode<T>* right)
-	{
-		float dist1 = pathFindData.at(left)->Distance;
-		return dist1 > pathFindData.at(right)->Distance;
-	};
-	priority_queue<GraphNode<T>*, vector<GraphNode<T>*>, decltype(compare)> priorityQ;
 	for (auto&& node : Nodes)
 	{
 		GraphNodeData<T> data{false, INFINITY, INFINITY, nullptr, false};
 		pathFindData.emplace(node.get(), std::make_shared<GraphNodeData<T>>(data));
 	}
+	auto compare = [pathFindData](GraphNode<T>* left, GraphNode<T>* right)
+	{
+		float dist1 = pathFindData.at(left)->Distance;
+		return dist1 > pathFindData.at(right)->Distance;
+	};
+	priority_queue<GraphNode<T>*, vector<GraphNode<T>*>, decltype(compare)> priorityQ(compare);
 	pathFindData.at(start.get())->Distance = 0;
 	pathFindData.at(start.get())->Queued = true;
 	priorityQ.push(start.get());
@@ -261,8 +261,8 @@ stack<shared_ptr<GraphNode<T>>> Graph<T>::Dijkstras(shared_ptr<GraphNode<T>> sta
 		{
 			if (edge->Start.get() == node)
 			{
-				auto end = edge->End.get();
-				auto endData = pathFindData.at(end);
+				auto endN = edge->End.get();
+				auto endData = pathFindData.at(endN);
 				if (endData->Distance > pathFindData.at(node)->Distance + edge->Cost)
 				{
 					endData->Visited = false;
@@ -272,11 +272,26 @@ stack<shared_ptr<GraphNode<T>>> Graph<T>::Dijkstras(shared_ptr<GraphNode<T>> sta
 				if (!endData->Visited && !endData->Queued)
 				{
 					endData->Queued = true;
-					priorityQ.push(end);
+					priorityQ.push(endN);
 				}
 			}
 		}
 		pathFindData.at(node)->Visited = true;
+		if (node == end.get())
+		{
+			break;
+		}
+	}
+	stack<shared_ptr<GraphNode<T>>> path;
+	shared_ptr<GraphNode<T>> currentNode = end;
+	while (true)
+	{
+		path.push(currentNode);
+		if (currentNode == start)
+		{
+			return path;
+		}
+		currentNode = pathFindData.at(currentNode.get())->Founder;
 	}
 }
 
