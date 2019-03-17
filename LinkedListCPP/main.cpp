@@ -67,7 +67,7 @@ int main()
 			{
 				goi.AddVertex(i);
 			}
-			std::uniform_int_distribution<> distr(0, value);
+			std::uniform_int_distribution<> distr(0, value - 1);
 			while (goi.BreadthFirst(value - 1, goi.Nodes[0]) == nullptr)
 			{
 				auto n1 = goi.Nodes[distr(eng)];

@@ -160,7 +160,7 @@ shared_ptr<GraphNode<T>> Graph<T>::BreadthFirst(T value, shared_ptr<GraphNode<T>
 		{
 			if (edge->Start == current && visited.count(edge->End.get()) == 0)
 			{
-				if (edge->End->Value)
+				if (edge->End->Value == value)
 				{
 					return edge->End;
 				}
