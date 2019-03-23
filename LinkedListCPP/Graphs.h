@@ -7,6 +7,7 @@
 #include <queue>
 #include <concurrent_priority_queue.h>
 #include <stack>
+#include <functional>
 
 using std::unique_ptr;
 using std::shared_ptr;
@@ -58,6 +59,7 @@ class Graph
 {
 private:
 	shared_ptr<GraphNode<T>> DepthFirstRecursive(T, shared_ptr<GraphNode<T>>, set<GraphNode<T>*>&);
+	stack<shared_ptr<GraphNode<T>>> Pathfind(shared_ptr<GraphNode<T>>, shared_ptr<GraphNode<T>>, bool, std::function<float(GraphNode<T>*)>);
 public:
 	vector<shared_ptr<GraphNode<T>>> Nodes;
 	vector<shared_ptr<Edge<T>>> Edges;
@@ -70,7 +72,7 @@ public:
 	shared_ptr<GraphNode<T>> DepthFirst(T, shared_ptr<GraphNode<T>>);
 	shared_ptr<GraphNode<T>> LinearSearch(T);
 	stack<shared_ptr<GraphNode<T>>> Dijkstras(shared_ptr<GraphNode<T>>, shared_ptr<GraphNode<T>>);
-	stack<shared_ptr<GraphNode<T>>> AStar(shared_ptr<GraphNode<T>>, shared_ptr<GraphNode<T>>);
+	stack<shared_ptr<GraphNode<T>>> AStar(shared_ptr<GraphNode<T>>, shared_ptr<GraphNode<T>>, std::function<float(GraphNode<T>*)>);
 };
 
 template<typename T>
@@ -237,20 +239,44 @@ GraphNodeData<T>::GraphNodeData(bool visited, float distance, float finalDistanc
 template<typename T>
 stack<shared_ptr<GraphNode<T>>> Graph<T>::Dijkstras(shared_ptr<GraphNode<T>> start, shared_ptr<GraphNode<T>> end)
 {
+	return Pathfind(start, end, false, nullptr);
+}
+
+template<typename T>
+stack<shared_ptr<GraphNode<T>>> Graph<T>::AStar(shared_ptr<GraphNode<T>> start, shared_ptr<GraphNode<T>> end, std::function<float(GraphNode<T>*)> heuristic)
+{
+	return Pathfind(start, end, true, heuristic);
+}
+
+template<typename T>
+stack<shared_ptr<GraphNode<T>>> Graph<T>::Pathfind(shared_ptr<GraphNode<T>> start, shared_ptr<GraphNode<T>> end, bool useHeuristic, std::function<float(GraphNode<T>*)> heuristic)
+{
 	map<GraphNode<T>*, shared_ptr<GraphNodeData<T>>> pathFindData{};
 	for (auto&& node : Nodes)
 	{
-		GraphNodeData<T> data{false, INFINITY, INFINITY, nullptr, false};
+		GraphNodeData<T> data{ false, INFINITY, INFINITY, nullptr, false };
 		pathFindData.emplace(node.get(), std::make_shared<GraphNodeData<T>>(data));
 	}
-	auto compare = [pathFindData](GraphNode<T>* left, GraphNode<T>* right)
+	std::function<bool(GraphNode<T>*, GraphNode<T>*)> compare = [pathFindData](GraphNode<T>* left, GraphNode<T>* right)
 	{
 		float dist1 = pathFindData.at(left)->Distance;
 		return dist1 > pathFindData.at(right)->Distance;
 	};
+	if (useHeuristic)
+	{
+		compare = [pathFindData](GraphNode<T>* left, GraphNode<T>* right)
+		{
+			float dist1 = pathFindData.at(left)->FinalDistance;
+			return dist1 > pathFindData.at(right)->FinalDistance;
+		};
+	}
 	priority_queue<GraphNode<T>*, vector<GraphNode<T>*>, decltype(compare)> priorityQ(compare);
 	pathFindData.at(start.get())->Distance = 0;
 	pathFindData.at(start.get())->Queued = true;
+	if (useHeuristic)
+	{
+		pathFindData.at(start.get())->FinalDistance = heuristic(start.get());
+	}
 	priorityQ.push(start.get());
 	while (true)
 	{
@@ -267,6 +293,10 @@ stack<shared_ptr<GraphNode<T>>> Graph<T>::Dijkstras(shared_ptr<GraphNode<T>> sta
 				{
 					endData->Visited = false;
 					endData->Distance = pathFindData.at(node)->Distance + edge->Cost;
+					if (useHeuristic)
+					{
+						endData->FinalDistance = endData->Distance + heuristic(endN);
+					}
 					endData->Founder = edge->Start;
 				}
 				if (!endData->Visited && !endData->Queued)
@@ -293,10 +323,4 @@ stack<shared_ptr<GraphNode<T>>> Graph<T>::Dijkstras(shared_ptr<GraphNode<T>> sta
 		}
 		currentNode = pathFindData.at(currentNode.get())->Founder;
 	}
-}
-
-template<typename T>
-stack<shared_ptr<GraphNode<T>>> Graph<T>::AStar(shared_ptr<GraphNode<T>> start, shared_ptr<GraphNode<T>> end)
-{
-
 }

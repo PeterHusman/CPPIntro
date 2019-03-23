@@ -6,9 +6,14 @@
 #include "LLRB.h"
 #include "Graphs.h"
 #include <random>
+#include <chrono>
 
 #include <vector>
 #include <array>
+
+using std::chrono::steady_clock;
+typedef steady_clock Clock;
+typedef std::chrono::time_point<Clock> TimePoint;
 
 void TestF();
 int Compare(int, int);
@@ -18,9 +23,9 @@ int main()
 {
 	std::random_device rd;
 	std::mt19937 eng(rd());
-	
+
 	std::array<std::array<int, 70>, 70> positions;
-	int radius = 30;
+	const int radius = 30;
 	const char esc = 27;
 
 	Graph<int> goi{};
@@ -37,7 +42,7 @@ int main()
 			size_t index = input.find_first_of(',');
 			if (index == std::string::npos)
 			{
-				value = std::stoi(input.substr(1, input.size()-1));
+				value = std::stoi(input.substr(1, input.size() - 1));
 			}
 			else
 			{
@@ -94,16 +99,36 @@ int main()
 				{
 					edge->End->Value *= -1;
 				}
-			} 
+			}
 		}
 		else if (op == 'd')
 		{
-			auto path = goi.Dijkstras(goi.LinearSearch(value), goi.LinearSearch(value3));
+			auto a = goi.LinearSearch(value);
+			auto b = goi.LinearSearch(value3);
+			TimePoint start = Clock::now();
+			auto path = goi.Dijkstras(a, b);
+			int time = (Clock::now() - start).count() / 1000;
 			while (!path.empty())
 			{
 				std::cout << path.top()->Value << " ";
 				path.pop();
 			}
+			std::cout << std::endl << time << " microseconds" << std::endl;
+			system("PAUSE");
+		}
+		else if (op == '*')
+		{
+			auto a = goi.LinearSearch(value);
+			auto b = goi.LinearSearch(value3);
+			TimePoint start = Clock::now();
+			auto path = goi.AStar(a, b, [](GraphNode<int>* a) -> float { return /*-(a->Value)*/0; });
+			int time = (Clock::now() - start).count() / 1000;
+			while (!path.empty())
+			{
+				std::cout << path.top()->Value << " ";
+				path.pop();
+			}
+			std::cout << std::endl << time << " microseconds" << std::endl;
 			system("PAUSE");
 		}
 
@@ -113,7 +138,7 @@ int main()
 		}
 
 		int i = 0;
-		int len = goi.Nodes.size(); 
+		int len = goi.Nodes.size();
 		for (auto&& node : goi.Nodes)
 		{
 			double angle = 2 * 3.141592653589793238462643383f * (double)i / (double)len;
