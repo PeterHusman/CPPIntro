@@ -82,6 +82,31 @@ int main()
 
 			}
 		}
+		else if (op == 'n')
+		{
+			goi.Nodes.clear();
+			goi.Edges.clear();
+			for (int i = 0; i < value; i++)
+			{
+				goi.AddVertex(i);
+			}
+			int n = 0;
+			std::uniform_int_distribution<> distr(0, value - 1);
+			while (goi.BreadthFirst(value - 1, goi.Nodes[0]) == nullptr)
+			{
+				int a = 0;
+				for (int x = 0; x < 3; x++)
+				{
+					auto n1 = goi.Nodes[n];
+					a = distr(eng);
+					auto n2 = goi.Nodes[a];
+					goi.AddEdge(n1, n2, 1, true);
+					goi.AddEdge(n2, n1, 1, true);
+				}
+				n = a;
+				distr = std::uniform_int_distribution<>{n, value - 1};
+			}
+		}
 		else if (op == 'r')
 		{
 			goi.RemoveVertex(value);
@@ -121,7 +146,7 @@ int main()
 			auto a = goi.LinearSearch(value);
 			auto b = goi.LinearSearch(value3);
 			TimePoint start = Clock::now();
-			auto path = goi.AStar(a, b, [](GraphNode<int>* a) -> float { return /*-(a->Value)*/0; });
+			auto path = goi.AStar(a, b, [](GraphNode<int>* a) -> float { return -(a->Value); });
 			int time = (Clock::now() - start).count() / 1000;
 			while (!path.empty())
 			{
